@@ -1,0 +1,23 @@
+{
+  "name": "newman-reporter-simpleslack",
+  "version": "1.0.0",
+  "description": "newman customizing pkg for slack reporting",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "newman",
+    "slack"
+  ],
+  "author": "jonghyeok.mun",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "axios-debug-log": "^0.8.3",
+    "jsonminify": "^0.4.1",
+    "pretty-ms": "^7.0.1",
+    "request": "^2.88.2"
+  }
+}

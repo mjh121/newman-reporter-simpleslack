@@ -1,0 +1,6 @@
+# dependency directories
+node_module/
+
+# vscode options
+.vscode
+
