@@ -1,6 +1,8 @@
 # dependency directories
-node_module/
+node_modules/
 
 # vscode options
 .vscode
 
+# MAC OS specific meta file
+.DS_Store
