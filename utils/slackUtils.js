@@ -2,6 +2,11 @@ const prettyms = require('pretty-ms');
 const axios = require('axios').default;
 const jsonminify = require('jsonminify');
 
+const {ImgUtils} = require('./imgUtils');
+
+// Slack message Layouts
+const dividerLayout = initStr = `{ "type": "divider" }`;
+
 async function send(webhookurl, slackMessage) {
     const config= {
         method: 'post',
@@ -23,8 +28,11 @@ async function send(webhookurl, slackMessage) {
     .catch((e) => { console.log(e) });
 }
 
-function makeSlackMessage(stats, timings, failures, title, channel) {
-    const curDay = new Date().getDate();
+function makeSlackMessage(stats, timings, failures, title, channel, imgLink) {
+    let accessory = makeAccessory(imgLink, failures.length);
+
+    const parsedFailures = parseFailures(failures);
+    const failuresMessage = makeFailureDetail(title, parsedFailures);
 
     return jsonminify(`
     {
@@ -40,9 +48,7 @@ function makeSlackMessage(stats, timings, failures, title, channel) {
                             "text": "${title}"
                         }
                     },
-                    {
-                        "type": "divider"
-                    },
+                    ${dividerLayout},
                     {
                         "type": "section",
                         "fields": [
@@ -87,10 +93,9 @@ function makeSlackMessage(stats, timings, failures, title, channel) {
                                 "text": "total : ${stats.assertions.total} / failed : ${stats.assertions.failed}"
                             }
                         ],
+                        ${accessory}
                     },
-                    {
-                        "type": "divider"
-                    },
+                    ${dividerLayout},
                     {
                         "type": "section",
                         "text": 
@@ -98,12 +103,81 @@ function makeSlackMessage(stats, timings, failures, title, channel) {
                             "type":"mrkdwn",
                             "text":"${failures.length > 0 ? ":x: Result: *FAIL*" : ":smile_cat: Result:  *PASS*"}  (total run duration : ${prettyms(timings.completed - timings.started)} :stopwatch:)"
                         }
-                    }
+                    },
+                    ${failures.length > 0 ? failuresMessage : '' }
                 ]
             }
         ]
     }
     `);
+}
+
+function parseFailures(failures) {
+    const descPrefix = "\t• ";
+
+    return failures.reduce((acc, cur) => {
+        if(cur.error.name == 'AssertionError') {
+            itemPath = [cur.parent.name, cur.source.name].join('/');
+
+            if((acc.length == 0) || (acc[acc.length-1].name != itemPath)) {
+                acc.push({
+                    name: itemPath,
+                    desc: descPrefix+cur.error.test
+                });
+            } else if(acc[acc.length-1].name == itemPath) {
+                acc[acc.length-1].desc = [acc[acc.length-1].desc, descPrefix+cur.error.test].join('\\n');
+            }
+        }
+
+        return acc;
+    }, []);
+}
+
+function makeFailureDetail(title, parsedFailures) {
+    initStr = `{
+        "type":"section",
+        "text": {
+            "type": "mrkdwn",
+            "text": " :fire: *${title} Detail*"
+        }
+    }`;
+
+    initStr = [initStr, dividerLayout].join(',');
+
+    return parsedFailures.reduce((acc, cur, i) => {
+        const failureText =  "*`"+(i+1) + "." + cur.name+"`*\\n" + cur.desc;
+        const failure = `
+        {
+            "type":"section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "${failureText}"
+            }
+        }`;
+
+        acc = [acc, failure].join(',');
+
+        return acc;
+    }, initStr);
+}
+
+function makeAccessory(imgLink, len) {
+    if(!imgLink) {
+        return '';
+    }
+
+    ImgUtils.init(imgLink);
+    const curDay = new Date().getDate();
+    dayImgLink = len > 0 ? ImgUtils.getImgLink("fail", curDay) : ImgUtils.getImgLink("pass", curDay);
+
+    return `
+    "accessory": {
+        "type": "image",
+        "image_url": "${dayImgLink}",
+                      
+        "alt_text": "daily calendar"
+    }
+    `;
 }
 
 exports.SlackUtils = { send, makeSlackMessage };
