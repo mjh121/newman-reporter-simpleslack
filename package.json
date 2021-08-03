@@ -11,8 +11,8 @@
     "newman",
     "slack"
   ],
-  "author": "jonghyeok.mun",
-  "license": "UNLICENSED",
+  "author": "jonghyeok.mun121@gmail.com",
+  "license": "MIT",
   "dependencies": {
     "axios": "^0.21.1",
     "axios-debug-log": "^0.8.3",
