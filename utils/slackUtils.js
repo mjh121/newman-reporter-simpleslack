@@ -29,11 +29,13 @@ const makeSlackMessage = (run, title, channel, imgLink) => {
 
     const parsedFailures = parseFailures(failures);
     const failuresMessage = makeFailureDetail(title, parsedFailures);
-    let accessory = makeAccessory(imgLink, failures.length);
+    const channelMessage = makeChannel(channel);
+    const accessoryMessage = makeAccessory(imgLink, failures.length);
+    
 
     return jsonminify(`
     {
-        "channel": "${channel}",
+        ${channelMessage}
         "attachments": [
             {
                 "color": "${failures.length > 0 ? "#FF4040" : "#AEDDEF" }",
@@ -90,7 +92,7 @@ const makeSlackMessage = (run, title, channel, imgLink) => {
                                 "text": "total : ${stats.assertions.total} / failed : ${stats.assertions.failed}"
                             }
                         ],
-                        ${accessory}
+                        ${accessoryMessage}
                     },
                     ${dividerLayout},
                     {
@@ -155,6 +157,16 @@ const makeFailureDetail = (title, parsedFailures) => {
 
         return [acc, failure].join(',');
     }, initStr);
+}
+
+const makeChannel = (channel) => {
+    if(!channel) {
+        return '';
+    }
+
+    return `
+    "channel": "${channel}",
+    `;
 }
 
 const makeAccessory = (imgLink, len) => {

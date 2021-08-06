@@ -1,23 +1,18 @@
 const {SlackUtils} = require('./utils/slackUtils');
 
-const validationCheck = (webhookUrl, channel) => {
+const validationCheck = (webhookUrl) => {
     if(!webhookUrl) {
         console.error("please check slack webhook url");
-        return;
-    }
-    
-    if(!channel) {
-        console.error("please check slack channel");
         return;
     }
 }
 
 function SimpleSlackReporter(emitter, reporterOptions) {
     const webhookUrl = reporterOptions.webhookurl || process.env.SLACK_WEBHOOK_URL;
-    const channel = reporterOptions.channel || process.env.SLACK_CHANNEL;
+    const channel = reporterOptions.channel || process.env.SLACK_CHANNEL || '';
     let imgLinkJson = reporterOptions.imglink || process.env.IMG_LINK || '';
     
-    validationCheck(webhookUrl, channel);
+    validationCheck(webhookUrl);
 
     if(imgLinkJson) {
         imgLinkJson = (imgLinkJson[0] == '/') ? imgLinkJson : [process.env.PWD, imgLinkJson].join('/');
